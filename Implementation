@@ -1,0 +1,88 @@
+1. Microservices Development
+The monolithic Coffee Suppliers application was divided into two independent microservices:
+- Customer Microservice – provides supplier information to customers.
+- Employee Microservice – provides administrative functionality for managing suppliers.
+2. Docker Containerization
+Separate Docker images were created for both microservices.
+Customer Application → Docker Image → Amazon ECR
+Employee Application → Docker Image → Amazon ECR
+
+The images were pushed to Amazon ECR and later used by ECS.
+3. Amazon ECS Deployment
+An ECS cluster named:
+microservices-serverlesscluster
+
+was created using AWS Fargate.
+Two ECS services were deployed:
+customer-microservice
+employee-microservice
+
+Both services use container port 8080.
+4. Application Load Balancer
+An Application Load Balancer named:
+microservicesLB
+
+was configured to route requests between the two microservices.
+/              → Customer Microservice
+/admin/*       → Employee Microservice
+
+The /admin/* route was also restricted using a source-IP rule.
+5. Amazon RDS Integration
+The microservices were connected to an Amazon RDS MySQL database containing the coffee supplier information.
+The Customer service displays supplier information, while the Employee service provides administrative operations.
+6. AWS CodeCommit
+The application source code was maintained in AWS CodeCommit repositories:
+microservices
+deployment
+
+The dev branch was used for the implementation.
+7. AWS CodePipeline
+Two automated CI/CD pipelines were created:
+update-customer-microservice
+update-employee-microservice
+
+The pipeline automatically processes the application source and container image before deployment.
+8. AWS CodeDeploy
+AWS CodeDeploy was configured for ECS Blue/Green deployment.
+Deployment groups:
+microservices-customer
+microservices-employee
+
+AppSpec files were used to specify the ECS service, container name, and container port.
+9. Service Scaling
+The Customer microservice was scaled to three desired tasks:
+Desired tasks: 3
+Running tasks: 3
+Healthy tasks: 3
+Unhealthy tasks: 0
+
+10. Final Verification
+The implementation was verified by accessing:
+Customer:
+http://<ALB-DNS>/suppliers
+
+Employee:
+http://<ALB-DNS>/admin/suppliers
+
+The Customer page successfully displayed supplier information, and the Employee page provided the administrative supplier interface.
+Both CI/CD pipelines completed successfully, and the ECS services were running successfully.
+Implementation Flow
+Source Code
+     ↓
+AWS CodeCommit
+     ↓
+CodePipeline
+     ↓
+Docker Image
+     ↓
+Amazon ECR
+     ↓
+AWS CodeDeploy
+     ↓
+ECS Fargate
+     ↓
+Application Load Balancer
+     ↓
+Customer / Employee Microservices
+     ↓
+Amazon RDS MySQL
